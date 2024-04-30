@@ -1,12 +1,11 @@
-
 const express = require("express");
 const io = require("socket.io");
 const http = require("http");
 const mongoose = require("mongoose");
-const User = require("./models/User");
+const Signup = require("./models/Signup");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
+const bcrypt = require("bcryptjs");
 
 const app = express();
 app.use(bodyParser.json());
@@ -29,6 +28,25 @@ server.listen(3001, () => {
   console.log("Listening on port 3001");
 });
 
+app.post("/signup", async (req, res) => {
+  let signUpData = req.body;
+  // console.log(signUpData);
+  let password = signUpData.password;
+  try {
+    let hashPassword = await bcrypt.hash(password, 10);
+    signUpData.password = hashPassword;
+    // console.log(signUpData.password);
+    let result = await Signup.create(signUpData);
 
-
-
+    res.status(201).json({
+      success: true,
+      message: "User created successfully.",
+      result: result,
+    });
+  } catch (error) {
+    res.status(409).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
